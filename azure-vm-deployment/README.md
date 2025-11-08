@@ -1,24 +1,39 @@
 # Azure VM with Terraform 🖥️☁️
 
-This folder contains Terraform code I wrote to deploy a **Windows VM** on Azure along with its supporting network resources. Here’s what I learned while doing it:
+This folder contains Terraform code to deploy a **Windows VM** on Azure along with networking and storage resources.  
+Here’s what I’ve learned while building it:
 
 ---
 
-## Key Learnings ✨
+## 🚀 Key Learnings
 
-- How to **set up and configure the Azure provider** in Terraform.  
-- Using **locals** to store reusable values like resource group names and location.  
-- Understanding **data sources** to reference existing resources (like a subnet).  
-- Creating a **resource group** and placing resources inside it.  
-- How to define a **virtual network and subnet** in code. 🌐  
-- Creating a **network interface** and connecting it to a subnet. 🔌  
-- Deploying a **Windows VM** with a specific size and image. 🪟  
-- Setting **dependencies** between resources using `depends_on` to control the order of creation.  
-- Practical exposure to **dynamic IP allocation** and VM networking.  
-- Reinforcing the importance of **secure handling of credentials** (don’t hard-code in production).  
+### Azure Provider & Basics
+- 🛠️ Configured **Azure provider** in Terraform.  
+- 📍 Used **locals** for reusable values like resource group and location.  
+- 🔎 Used **data sources** to reference existing resources (e.g., subnet).  
+
+### Networking
+- 🌐 Created a **virtual network** and **subnet**.  
+- 🔌 Built a **network interface** and linked it to the subnet.  
+- 🌍 Assigned a **public IP** to allow external access.  
+- 🔒 Learned about **NSGs** and controlling access (e.g., RDP port).  
+
+### Virtual Machines
+- 🪟 Deployed a **Windows VM** with a specific size (`Standard_B2s`) and image.  
+- 💾 Created **managed data disks** and attached them to the VM.  
+- 🛡️ Configured **OS disk properties**: caching (`ReadWrite`) & storage type (`Standard_LRS`).  
+- ⏱️ Managed resource **dependencies** with `depends_on` to control creation order.  
+
+### Best Practices
+- 🔑 Learned **secure credential handling** (avoid hard-coding usernames/passwords).  
+- 🔄 Understood how Terraform manages the **lifecycle of Azure resources**.  
 
 ---
 
-## Summary 📝
+## 📝 Summary
 
-By going through this exercise, I applied my Terraform knowledge to **real-world Azure scenarios**, learned how resources interact, and gained confidence in managing **VMs and networking infrastructure as code**.
+This project helped me **apply Terraform in real-world Azure scenarios**, from networking to VMs and storage.  
+It reinforced the importance of **infrastructure as code**, **resource dependencies**, and **security best practices**.
+
+---
+
