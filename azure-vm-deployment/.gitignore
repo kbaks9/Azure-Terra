@@ -1,0 +1,12 @@
+# Terraform state files
+*.tfstate
+*.tfstate.backup
+
+# Terraform plan file
+*.tfplan
+
+# Local Terraform config
+.terraform.local.hcl
+
+# Terraform plugin directory
+.terraform/
