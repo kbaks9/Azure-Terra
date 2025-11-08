@@ -9,7 +9,7 @@ terraform {
 
 # Use EXPORT for tenant ID (etc) into CLI, rather than putting the detail on here
 provider "azurerm" {
-  features {}
+  features { }
 }
 
 # Holding variable resource_group for the RG
@@ -18,12 +18,6 @@ provider "azurerm" {
 locals {
     resource_group = "app-grp"
     location = "North Europe"
-}
-
-data "azurerm_subnet" "subnetA" {
-    name = "subnetA"
-    virtual_network_name = "app-network"
-    resource_group_name = local.resource_group
 }
 
 # Create RG named app_grp, located in North Europe now
@@ -42,11 +36,19 @@ resource "azurerm_virtual_network" "app_network" {
   depends_on = [ 
     azurerm_resource_group.app_grp 
   ]
+}
 
-  subnet {
-    name             = "subnetA"
-    address_prefixes = ["10.0.1.0/24"]
-  }
+# Create subnet
+resource "azurerm_subnet" "SubnetA" {
+  name                 = "SubnetA"
+  resource_group_name  = local.resource_group
+  virtual_network_name = azurerm_virtual_network.app_network.name
+  address_prefixes     = ["10.0.1.0/24"]
+
+  # Depends on the creation of the virtual network first.
+  depends_on = [ 
+    azurerm_virtual_network.app_network,
+   ]
 }
 
 # Creates a network interface: app_interface
@@ -57,14 +59,15 @@ resource "azurerm_network_interface" "app_interface" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = data.azurerm_subnet.subnetA.id
+    subnet_id                     = azurerm_subnet.SubnetA.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id = azurerm_public_ip.app_public_ip.id
   }
 
   depends_on = [
     azurerm_virtual_network.app_network,
-    azurerm_public_ip.app_public_ip
+    azurerm_public_ip.app_public_ip,
+    azurerm_subnet.SubnetA
   ] 
 }
 
@@ -76,8 +79,10 @@ resource "azurerm_windows_virtual_machine" "app_vm" {
   size                = "Standard_B2s"
   admin_username      = ""
   admin_password      = ""
+  availability_set_id = azurerm_availability_set.app_set.id
+
   network_interface_ids = [
-    azurerm_network_interface.app_interface.id
+    azurerm_network_interface.app_interface.id,    
   ]
 
   # The virtual hard drive that holds the operating system.
@@ -94,9 +99,10 @@ resource "azurerm_windows_virtual_machine" "app_vm" {
     version   = "latest"
   }
 
-  # Depends on the creation of the network interface: app_interface
+  # It'll check if these two resource blocks are created, and then it'll create the VM after.
   depends_on = [ 
-    azurerm_network_interface.app_interface
+    azurerm_network_interface.app_interface,
+    azurerm_availability_set.app_set
    ]
 }  
 
@@ -106,6 +112,10 @@ resource "azurerm_public_ip" "app_public_ip" {
   resource_group_name = local.resource_group
   location            = local.location
   allocation_method   = "Static"
+
+  depends_on = [ 
+    azurerm_resource_group.app_grp
+   ]
 }
 
 # Creating data disks.
@@ -132,3 +142,16 @@ resource "azurerm_virtual_machine_data_disk_attachment" "disk_attach" {
    ]
 }
 
+# This creates an availability set named: app_set
+resource "azurerm_availability_set" "app_set" {
+  name                = "app-set"
+  location            = local.location
+  resource_group_name = local.resource_group
+  platform_fault_domain_count = 3
+  platform_update_domain_count = 3
+
+  depends_on = [ 
+    azurerm_resource_group.app_grp
+   ]
+
+}

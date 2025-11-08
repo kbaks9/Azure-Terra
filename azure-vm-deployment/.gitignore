@@ -10,3 +10,5 @@
 
 # Terraform plugin directory
 .terraform/
+
+.txt
