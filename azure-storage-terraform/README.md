@@ -1,6 +1,6 @@
 # 🌐 Terraform Azure Storage Setup
 
-This repository contains a **Terraform configuration** to create an **Azure Resource Group, Storage Account, Container, and Blob**.  
+This folder contains a **Terraform configuration** to create an **Azure Resource Group, Storage Account, Container, and Blob**.  
 
 **Purpose:** Practice Terraform and apply Azure skills in a real environment.  
 
