@@ -67,8 +67,8 @@ resource "azurerm_windows_virtual_machine" "app_vm" {
   resource_group_name = local.resource_group
   location            = local.location
   size                = "Standard_B1s"
-  admin_username      = "kbaks9"
-  admin_password      = "Summerfire11!"
+  admin_username      = ""
+  admin_password      = ""
   network_interface_ids = [
     azurerm_network_interface.app_interface.id,
   ]
