@@ -155,3 +155,58 @@ resource "azurerm_availability_set" "app_set" {
    ]
 
 }
+
+# Here we are creating a storage account.
+resource "azurerm_storage_account" "appstore" {
+  name                     = "appstore993"
+  resource_group_name      = local.resource_group
+  location                 = local.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  
+}
+
+# We are creating a container which depends on the storage account.
+resource "azurerm_storage_container" "data" {
+  name                  = "data"
+  storage_account_id    =  azurerm_storage_account.appstore.id
+  container_access_type = "blob"
+  
+
+  depends_on = [ 
+    azurerm_storage_account.appstore
+   ]
+} 
+
+# Here we're uploading our IIS config script as a blob to the storage account.
+resource "azurerm_storage_blob" "IIS_config" {
+  name                   = "IIS_Config.ps1"
+  storage_account_name   = azurerm_storage_account.appstore.name
+  storage_container_name = azurerm_storage_container.data.name
+  type                   = "Block"
+  source                 = "IIS_Config.ps1"
+
+  depends_on = [ 
+    azurerm_storage_container.data
+   ]
+}
+
+# Create virtual machine extension aand deploy it
+resource "azurerm_virtual_machine_extension" "vm_extension" {
+  name                 = "appvm-extension"
+  virtual_machine_id   = azurerm_windows_virtual_machine.app_vm.id
+  publisher            = "Microsoft.Compute"
+  type                 = "CustomScriptExtension"
+  type_handler_version = "1.10"
+
+  depends_on = [ 
+    azurerm_storage_blob.IIS_config
+   ]
+
+  settings = <<SETTINGS
+ {
+  "fileUris": ["https://${azurerm_storage_account.appstore.name}.blob.core.windows.net/data/IIS_Config.ps1"],
+  "commandToExecute": "powershell -ExecutionPolicy Unrestricted -file IIS_Config.ps1"
+ }
+SETTINGS
+}
