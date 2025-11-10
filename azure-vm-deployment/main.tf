@@ -12,12 +12,17 @@ provider "azurerm" {
   features { }
 }
 
+/* data "http" "my_ip" {
+  url = "https://ifconfig.me"
+} */
+
 # Holding variable resource_group for the RG
 # Due to UK South & my subscription not supporting VMs
 # changed to North Europe
 locals {
     resource_group = "app-grp"
     location = "North Europe"
+   // my_ip_cidr = "${chomp(data.http.my_ip.response_body)}/32"
 }
 
 # Create RG named app_grp, located in North Europe now
@@ -209,4 +214,49 @@ resource "azurerm_virtual_machine_extension" "vm_extension" {
   "commandToExecute": "powershell -ExecutionPolicy Unrestricted -file IIS_Config.ps1"
  }
 SETTINGS
+}
+
+variable "my_ip" {
+  type = string
+}
+
+resource "azurerm_network_security_group" "app_nsg" {
+  name                = "app-nsg"
+  location            = local.location
+  resource_group_name = local.resource_group
+
+  # Rule for HTTP access
+  security_rule {
+    name                       = "Allow_HTTP"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = var.my_ip
+    destination_address_prefix = "*"
+  }
+
+  # Rule for RDP access
+ security_rule {
+    name                       = "Allow_RDP"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = var.my_ip
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "nsg_association" {
+  subnet_id                 = azurerm_subnet.SubnetA.id
+  network_security_group_id = azurerm_network_security_group.app_nsg.id
+
+  depends_on = [ 
+    azurerm_network_security_group.app_nsg
+   ]
 }
